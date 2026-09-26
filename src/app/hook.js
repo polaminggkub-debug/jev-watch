@@ -28,7 +28,8 @@ export function preToolUse(payload, env = process.env) {
   return {
     hookSpecificOutput: {
       hookEventName: 'PreToolUse',
-      updatedInput: { command: wrapped, run_in_background: true },
+      // Keep the caller's other fields (description, timeout) so the task stays named.
+      updatedInput: { ...payload.tool_input, command: wrapped, run_in_background: true },
     },
   };
 }

@@ -27,6 +27,8 @@ test('the hook output edits the command and backgrounds it without deciding perm
   const out = preToolUse({ tool_name: 'Bash', tool_input: { command: 'codex exec "x"' } }, env);
   assert.deepEqual(Object.keys(out.hookSpecificOutput).sort(), ['hookEventName', 'updatedInput']);
   assert.equal(out.hookSpecificOutput.updatedInput.run_in_background, true);
+  const named = preToolUse({ tool_name: 'Bash', tool_input: { command: 'codex exec "x"', description: 'Fix chapter 5' } }, env);
+  assert.equal(named.hookSpecificOutput.updatedInput.description, 'Fix chapter 5');
   assert.equal(preToolUse({ tool_name: 'Read', tool_input: {} }, env), null);
   assert.equal(preToolUse({ tool_name: 'Bash', tool_input: { command: 'codex exec "x"' } }, { ...env, JEV_WATCH_DISABLE: '1' }), null);
 });
