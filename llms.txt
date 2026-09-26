@@ -1,0 +1,18 @@
+# jev-watch
+
+> A watchdog for AI coding agents. jev-watch runs Codex, OpenCode or any coding CLI in the background, detects when the agent loops on the same error, stalls, or drifts off task, stops it, and prints a short report so a lead agent (such as Claude Code) can send a correction that resumes the same Codex/OpenCode session. It uses free local rules plus TypeSafe's Jev decision model (sub-second, available on OpenRouter). Node 20+, zero runtime dependencies, MIT.
+
+Use it when one orchestrator agent delegates coding work to cheaper worker agents and you want to stop paying the orchestrator to poll worker logs.
+
+## Docs
+
+- [README](https://github.com/polaminggkub-debug/jev-watch/blob/main/README.md): install, usage, report format, FAQ
+- [Architecture](https://github.com/polaminggkub-debug/jev-watch/blob/main/ARCHITECTURE.md): layers and enforced guard rules
+
+## Quick reference
+
+- Run and watch: `jev-watch -- codex exec "<task>"` or `jev-watch -- opencode run "<task>"`
+- Resume after a stop: `jev-watch --resume <runId> "<correction>"`
+- Watch an existing log: `jev-watch --log <file> --pid <pid> --task "<task>"`
+- Exit codes: 0 done, 1 worker failed, 2 stopped by watcher, 3 out of corrections, 64 usage
+- API key: JEV_WATCH_API_KEY, else OPENROUTER_API_KEY, else TYPESAFE_API_KEY; `--no-jev` for local rules only

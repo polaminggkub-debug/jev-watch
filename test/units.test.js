@@ -1,8 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { Rules, errorSignature } from '../src/rules.js';
-import { buildRequest, askJev, jevProblem, resolveKey } from '../src/jev.js';
-import { extractSessionId, resumeCommand, guessTask, workerCwd, detectTool } from '../src/session.js';
+import { Rules, errorSignature, askJev, jevProblem, statusRequest } from '../src/entities/detection/index.js';
+import { buildRequest, resolveKey } from '../src/shared/jev/index.js';
+import { extractSessionId, resumeCommand, guessTask, workerCwd, detectTool } from '../src/entities/worker/index.js';
 
 test('error signatures ignore numbers, hashes and positions', () => {
   const a = errorSignature('Error: timeout 3000ms at src/a.ts:12:5 (abc1234f)');
@@ -43,12 +43,13 @@ test('silence and no file changes count as stalled', () => {
 
 test('key order and OpenRouter routing', () => {
   assert.equal(resolveKey({ OPENROUTER_API_KEY: 'sk-or-b', JEV_WATCH_API_KEY: 'sk-or-a' }), 'sk-or-a');
-  const input = { task: 't', log: 'x'.repeat(10000), files: [], elapsedMin: 1 };
-  const or = buildRequest(input, { key: 'sk-or-1', env: {} });
+  const request = statusRequest({ task: 't', log: 'x'.repeat(10000), files: [], elapsedMin: 1 });
+  assert.equal(request.state.recent_output.length, 6000);
+  const or = buildRequest(request, { key: 'sk-or-1', env: {} });
   assert.match(or.url, /openrouter/);
+  assert.equal(or.body.model, '~typesafe/jev-latest');
   assert.deepEqual(or.body.provider, { zdr: true, data_collection: 'deny' });
-  assert.equal(or.body.state.recent_output.length, 6000);
-  assert.match(buildRequest(input, { key: 'ts-1', env: {} }).url, /typesafe/);
+  assert.match(buildRequest(request, { key: 'ts-1', env: {} }).url, /typesafe/);
 });
 
 test('askJev parses answers and never throws', async () => {

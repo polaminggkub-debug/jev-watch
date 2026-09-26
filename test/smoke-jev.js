@@ -2,7 +2,8 @@
 import { readFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { askJev, jevProblem, resolveKey } from '../src/jev.js';
+import { askJev, jevProblem } from '../src/entities/detection/index.js';
+import { resolveKey } from '../src/shared/jev/index.js';
 
 let key = resolveKey();
 if (!key) {

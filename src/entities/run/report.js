@@ -1,12 +1,13 @@
 // The report is what the orchestrator reads instead of the whole log, so it
 // stays short: verdict, why, what changed, and the last lines of output.
 
+import { stripAnsi } from '../../shared/text/index.js';
+
 const TAIL_LINES = 50;
 const MAX_LINE = 300;
 
 function tailLines(text, n) {
-  return text
-    .replace(/\x1b\[[0-9;]*m/g, '')
+  return stripAnsi(text)
     .split('\n')
     .filter((l) => l.trim())
     .slice(-n)

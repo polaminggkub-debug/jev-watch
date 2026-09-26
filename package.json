@@ -1,28 +1,57 @@
 {
   "name": "jev-watch",
   "version": "0.1.0",
-  "description": "Watch a background coding agent (Codex, OpenCode) and wake the orchestrator only when it loops, stalls or drifts off task. Uses Jev for fast judgement.",
+  "description": "Watchdog for AI coding agents: stop Codex or OpenCode when they loop, stall or drift off task, then resume the same session with a correction. Built for Claude Code orchestrators. Uses Jev via OpenRouter.",
+  "keywords": [
+    "ai-agents",
+    "coding-agent",
+    "watchdog",
+    "agent-monitoring",
+    "codex",
+    "codex-cli",
+    "opencode",
+    "claude-code",
+    "orchestrator",
+    "multi-agent",
+    "llm",
+    "jev",
+    "typesafe",
+    "openrouter",
+    "loop-detection",
+    "cli"
+  ],
+  "homepage": "https://github.com/polaminggkub-debug/jev-watch#readme",
+  "bugs": {
+    "url": "https://github.com/polaminggkub-debug/jev-watch/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/polaminggkub-debug/jev-watch.git"
+  },
+  "license": "MIT",
   "type": "module",
   "bin": {
     "jev-watch": "bin/jev-watch.js"
   },
   "files": [
     "bin",
-    "src"
+    "src",
+    "README.md",
+    "LICENSE",
+    "llms.txt"
   ],
   "scripts": {
-    "test": "node --test test/"
+    "test": "node --test test/*.test.js",
+    "lint": "eslint .",
+    "check:arch": "node scripts/check-architecture.mjs",
+    "check": "npm run lint && npm run check:arch && npm test"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=20"
   },
-  "keywords": [
-    "jev",
-    "codex",
-    "opencode",
-    "claude-code",
-    "agent",
-    "watchdog"
-  ],
-  "license": "MIT"
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.11.0",
+    "globals": "^17.12.0"
+  }
 }

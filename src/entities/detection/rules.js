@@ -1,6 +1,8 @@
 // Deterministic checks. They cost nothing and never guess, so a hit stops the
 // worker right away; Jev only covers what these cannot see.
 
+import { stripAnsi } from '../../shared/text/index.js';
+
 const ERROR_LINE = /\b(error|failed|failure|exception|traceback|cannot|fatal)\b|✘|✗/i;
 const WINDOW_MS = 10 * 60 * 1000;
 
@@ -9,8 +11,7 @@ const WINDOW_MS = 10 * 60 * 1000;
 export function errorSignature(line) {
   const text = line.trim();
   if (text.length < 8 || !ERROR_LINE.test(text)) return null;
-  return text
-    .replace(/\x1b\[[0-9;]*m/g, '')
+  return stripAnsi(text)
     .replace(/\b[0-9a-f]{7,}\b/gi, '#')
     .replace(/\d+(\.\d+)?(ms|s)\b/g, '#')
     .replace(/:\d+(:\d+)?/g, ':#')

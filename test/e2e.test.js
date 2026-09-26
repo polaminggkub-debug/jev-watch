@@ -5,8 +5,8 @@ import { mkdtempSync, readFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { watch } from '../src/watcher.js';
-import { spawnSource } from '../src/sources.js';
+import { watch } from '../src/features/watch/index.js';
+import { spawnSource } from '../src/shared/process/index.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const BIN = path.join(here, '..', 'bin', 'jev-watch.js');

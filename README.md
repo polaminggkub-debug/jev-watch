@@ -1,8 +1,14 @@
 # jev-watch
 
-Watch a background coding agent (Codex, OpenCode, or any CLI) and wake your orchestrator **only** when the worker loops, stalls, or drifts off task.
+[![CI](https://github.com/polaminggkub-debug/jev-watch/actions/workflows/ci.yml/badge.svg)](https://github.com/polaminggkub-debug/jev-watch/actions/workflows/ci.yml)
+![zero dependencies](https://img.shields.io/badge/runtime%20deps-0-brightgreen)
+![license](https://img.shields.io/badge/license-MIT-blue)
 
-If you run Claude Code (or any agent) as the lead and hand implementation to Codex or OpenCode, the lead usually sits in a `sleep 60; tail log` loop, paying tokens to read logs that say "still working". jev-watch does that watching for you. It uses free local rules plus [Jev](https://typesafe.ai), a fast decision model that answers in under a second for a fraction of a cent. The lead reads one short report when something actually needs a decision.
+**jev-watch is a watchdog for AI coding agents.** It runs Codex, OpenCode or any coding CLI in the background, notices when the agent is **looping on the same error, stalled, or drifting off task**, stops it, and hands a short report to your lead agent (Claude Code, or you). The lead writes a correction and jev-watch **resumes the same Codex/OpenCode session**.
+
+It is built for the "one smart orchestrator, cheaper workers" setup: Claude Code plans and reviews, Codex or OpenCode writes the code. Without a watchdog the orchestrator sits in a `sleep 60; tail log` loop, paying premium tokens to read logs that say "still working", or it only finds out 30 minutes later that the worker spent the whole time fixing the same import.
+
+jev-watch checks every 45 seconds with **free local rules** and one question to [Jev](https://typesafe.ai), TypeSafe's fast decision model (sub-second, a fraction of a cent, available through OpenRouter). Your orchestrator stays idle and costs nothing until something actually needs a decision.
 
 ```
 lead agent ──► jev-watch -- codex exec "fix the login page"
@@ -19,12 +25,12 @@ jev-watch --resume <runId> "you are editing the wrong store, fix X in Y"
 ## Install
 
 ```bash
-npm install -g jev-watch      # or: npx jev-watch ...
+npm install -g github:polaminggkub-debug/jev-watch
 ```
 
-Node 18 or newer. No dependencies.
+Node 20 or newer. Zero runtime dependencies. macOS and Linux.
 
-Set one key: `JEV_WATCH_API_KEY`, else `OPENROUTER_API_KEY`, else `TYPESAFE_API_KEY`. Keys starting with `sk-or-` go through OpenRouter with zero data retention. With no key, jev-watch runs on local rules only.
+Set one key: `JEV_WATCH_API_KEY`, else `OPENROUTER_API_KEY`, else `TYPESAFE_API_KEY`. Keys starting with `sk-or-` go through OpenRouter with zero data retention. With no key, jev-watch still runs on its local rules.
 
 ## Use
 
@@ -36,11 +42,19 @@ jev-watch -- opencode run --auto "migrate the settings page to PrimeVue"
 # After a stop: send a correction into the same session and keep watching
 jev-watch --resume 20260926-0735-a1b2 "stop editing OrderList.vue, the bug is in useOrders.ts"
 
-# Watch a log your own script writes (stop needs --pid)
+# Watch a log your own script writes (stopping needs --pid)
 jev-watch --log worker.log --pid 4242 --task "fix the failing checkout test"
 ```
 
-Run it as a background command from your lead agent. In Claude Code, a background Bash command wakes the agent when it exits, so the agent does nothing and costs nothing until the report arrives.
+### With Claude Code
+
+Run jev-watch as a **background** Bash command. Claude Code wakes the agent when a background command exits, so Claude does nothing until the report arrives. Add this to your `CLAUDE.md`:
+
+```markdown
+When delegating to Codex or OpenCode, run it as a background command through jev-watch:
+`jev-watch -- codex exec "<task>"`. When it exits with code 2, read the report, decide what
+went wrong, and continue with `jev-watch --resume <runId> "<correction>"`. On exit code 3, ask me.
+```
 
 ## What counts as a problem
 
@@ -51,7 +65,7 @@ Run it as a background command from your lead agent. In Claude Code, a backgroun
 | No file changes (git) | free | `--no-change-min 20` |
 | Jev says `looping`, `off_task` or `stalled` | <0.01¢ per check | `--threshold 0.8`, `--strikes 2` in a row |
 
-Local rules stop the worker on the first hit. Jev must agree twice in a row, so one odd answer never kills a good run. Jev is only asked when the log has moved since the last check.
+Local rules stop the worker on the first hit. Jev must agree twice in a row, so one odd answer never kills a good run. Jev is only asked when the log has moved since the last check. A 30-minute run costs well under 1¢.
 
 ## The report
 
@@ -84,13 +98,34 @@ Exit codes: `0` done · `1` worker failed · `2` stopped by the watcher · `3` o
 | OpenCode | `--format json` `sessionID` | `opencode run --session <id> "<msg>"`, else `--continue` |
 | Anything else | – | watched and stopped, not resumed |
 
+## FAQ
+
+### How do I stop Codex from looping on the same error?
+Run it through `jev-watch -- codex exec "..."`. When the same error shows up in three separate checks, jev-watch stops Codex, prints the repeated error and the last 50 log lines, and gives you a `--resume` command to send a correction into the same Codex session.
+
+### How do I monitor OpenCode or Codex running in the background from Claude Code?
+Start the worker through jev-watch as a background command. Claude Code is woken only when jev-watch exits, which happens when the worker finishes or needs a correction. No polling, no reading logs.
+
+### Does jev-watch replace my orchestrator?
+No. Tools like foreman put a model in charge of the workers. jev-watch only watches and stops; your orchestrator (Claude Code, another agent, or you) still decides what the correction is.
+
+### What does it cost?
+The local rules are free. Each Jev check sends about 2,000 tokens and costs well under 0.01¢. Jev is skipped when the log has not changed. Use `--no-jev` for rules only.
+
+### Is my code sent anywhere?
+Only the task, the last ~6,000 characters of the worker log and the list of changed file names go to Jev. OpenRouter requests require zero-data-retention providers. With `--no-jev`, nothing leaves your machine.
+
+### Does it work with Aider, Claude Code subagents or other CLIs?
+Any command that prints to stdout/stderr can be watched and stopped. Session resume is built in for Codex and OpenCode; other CLIs are welcome as pull requests in `src/entities/worker`.
+
 ## Development
 
 ```bash
-npm test
+npm ci
+npm run check   # lint + architecture guard + tests
 ```
 
-Tests use fake workers and a fake `codex` binary, so they never call an API.
+Architecture and guard rules are in [ARCHITECTURE.md](ARCHITECTURE.md). Tests use fake workers and a fake `codex` binary, so they never call an API. `node test/smoke-jev.js` runs three sample cases against the real Jev API.
 
 ## License
 
