@@ -1,0 +1,11 @@
+#!/usr/bin/env node
+// Fake codex CLI: a fresh run loops on one error, a resumed run succeeds.
+import fs from 'node:fs';
+if (process.env.FAKE_CODEX_ARGS) fs.appendFileSync(process.env.FAKE_CODEX_ARGS, JSON.stringify(process.argv.slice(2)) + '\n');
+if (process.argv.includes('resume')) {
+  console.log('resumed, fixing the import');
+  setTimeout(() => process.exit(0), 100);
+} else {
+  console.error('session id: 0199a1b2-c3d4-7e5f-8a9b-0c1d2e3f4a5b');
+  setInterval(() => console.log('Error: Cannot find module \'@/entities/order\''), 30);
+}

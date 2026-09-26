@@ -1,0 +1,28 @@
+{
+  "name": "jev-watch",
+  "version": "0.1.0",
+  "description": "Watch a background coding agent (Codex, OpenCode) and wake the orchestrator only when it loops, stalls or drifts off task. Uses Jev for fast judgement.",
+  "type": "module",
+  "bin": {
+    "jev-watch": "bin/jev-watch.js"
+  },
+  "files": [
+    "bin",
+    "src"
+  ],
+  "scripts": {
+    "test": "node --test test/"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "jev",
+    "codex",
+    "opencode",
+    "claude-code",
+    "agent",
+    "watchdog"
+  ],
+  "license": "MIT"
+}
