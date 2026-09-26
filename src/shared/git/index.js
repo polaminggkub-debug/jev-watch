@@ -1,1 +1,1 @@
-export { isRepo, changedFiles, fingerprint } from './status.js';
+export { isRepo, changedFiles, changedSince, fingerprint, snapshot } from './status.js';

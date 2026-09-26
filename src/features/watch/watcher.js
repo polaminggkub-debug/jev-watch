@@ -4,7 +4,7 @@
 import { createWriteStream } from 'node:fs';
 import { Rules, askJev, jevProblem } from '../../entities/detection/index.js';
 import { extractSessionId } from '../../entities/worker/index.js';
-import { changedFiles, fingerprint } from '../../shared/git/index.js';
+import { changedSince, fingerprint, snapshot } from '../../shared/git/index.js';
 
 const TAIL_CHARS = 64 * 1024;
 
@@ -28,6 +28,7 @@ class Watcher {
     Object.assign(this, { tail: '', sessionId: null, stopped: null, lastJev: null, strikes: 0, jevCalls: 0, grew: false });
     this.startedAt = now();
     this.fp = fingerprint(cwd);
+    this.before = snapshot(cwd);
     source.onData((text) => this.onData(text));
   }
 
@@ -59,7 +60,7 @@ class Watcher {
   async checkJev() {
     this.grew = false;
     this.jevCalls += 1;
-    const input = { task: this.task, log: this.tail, files: changedFiles(this.cwd), elapsedMin: this.elapsedMin() };
+    const input = { task: this.task, log: this.tail, files: changedSince(this.cwd, this.before), elapsedMin: this.elapsedMin() };
     const answer = await this.ask(input);
     if (answer.error) return;
     this.lastJev = answer;
@@ -92,7 +93,7 @@ class Watcher {
       lastJev: this.lastJev,
       jevCalls: this.jevCalls,
       elapsedMin: this.elapsedMin(),
-      files: changedFiles(this.cwd),
+      files: changedSince(this.cwd, this.before),
       repeated: this.rules.repeatedErrors().slice(0, 3),
       tail: this.tail,
     };
