@@ -1,6 +1,6 @@
 {
   "name": "jev-watch",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Watchdog for AI coding agents: stop Codex or OpenCode when they loop, stall or drift off task, then resume the same session with a correction. Built for Claude Code orchestrators. Uses Jev via OpenRouter.",
   "keywords": [
     "ai-agents",
@@ -36,13 +36,16 @@
   "files": [
     "bin",
     "src",
+    "hooks",
+    "skills",
+    ".claude-plugin",
     "README.md",
     "LICENSE",
     "llms.txt"
   ],
   "scripts": {
     "test": "node --test test/*.test.js",
-    "lint": "eslint .",
+    "lint": "eslint bin/jev-watch.js src scripts test hooks eslint.config.js",
     "check:arch": "node scripts/check-architecture.mjs",
     "check": "npm run lint && npm run check:arch && npm test"
   },

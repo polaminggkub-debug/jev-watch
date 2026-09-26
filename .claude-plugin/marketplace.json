@@ -1,0 +1,14 @@
+{
+  "name": "jev-watch",
+  "description": "jev-watch: a watchdog plugin for Claude Code that supervises Codex and OpenCode workers.",
+  "owner": {
+    "name": "polaminggkub-debug"
+  },
+  "plugins": [
+    {
+      "name": "jev-watch",
+      "source": "./",
+      "description": "Watchdog for Codex and OpenCode workers: stops them when they loop, stall or drift off task, and lets Claude resume the same session with a correction."
+    }
+  ]
+}

@@ -24,13 +24,36 @@ jev-watch --resume <runId> "you are editing the wrong store, fix X in Y"
 
 ## Install
 
+### Claude Code plugin (recommended, ready to use)
+
+```bash
+claude plugin marketplace add polaminggkub-debug/jev-watch
+claude plugin install jev-watch@jev-watch
+```
+
+Then put your key in `~/.claude/settings.json` so the watcher can ask Jev (skip it to run on local rules only):
+
+```json
+{ "env": { "OPENROUTER_API_KEY": "sk-or-..." } }
+```
+
+That is all. The plugin brings three things:
+
+- **A hook.** Every time Claude runs `codex exec ...` or `opencode run ...`, the call is wrapped in jev-watch and moved to the background. Your normal permission rules still apply.
+- **A skill.** Claude learns what the report means, how to write a correction, and when to stop and ask you.
+- **The `jev-watch` command** on Claude's PATH, for `--resume`. No npm install needed.
+
+Turn it off for one command by starting it with `JEV_WATCH_DISABLE=1 `.
+
+### Standalone CLI
+
 ```bash
 npm install -g github:polaminggkub-debug/jev-watch
 ```
 
 Node 20 or newer. Zero runtime dependencies. macOS and Linux.
 
-Set one key: `JEV_WATCH_API_KEY`, else `OPENROUTER_API_KEY`, else `TYPESAFE_API_KEY`. Keys starting with `sk-or-` go through OpenRouter with zero data retention. With no key, jev-watch still runs on its local rules.
+Key lookup: `JEV_WATCH_API_KEY`, else `OPENROUTER_API_KEY`, else `TYPESAFE_API_KEY`. Keys starting with `sk-or-` go through OpenRouter with zero data retention. With no key, jev-watch still runs on its local rules.
 
 ## Use
 
@@ -46,15 +69,7 @@ jev-watch --resume 20260926-0735-a1b2 "stop editing OrderList.vue, the bug is in
 jev-watch --log worker.log --pid 4242 --task "fix the failing checkout test"
 ```
 
-### With Claude Code
-
-Run jev-watch as a **background** Bash command. Claude Code wakes the agent when a background command exits, so Claude does nothing until the report arrives. Add this to your `CLAUDE.md`:
-
-```markdown
-When delegating to Codex or OpenCode, run it as a background command through jev-watch:
-`jev-watch -- codex exec "<task>"`. When it exits with code 2, read the report, decide what
-went wrong, and continue with `jev-watch --resume <runId> "<correction>"`. On exit code 3, ask me.
-```
+With the plugin, Claude does all of this for you: it only ever types `codex exec "..."`.
 
 ## What counts as a problem
 
@@ -104,7 +119,7 @@ Exit codes: `0` done · `1` worker failed · `2` stopped by the watcher · `3` o
 Run it through `jev-watch -- codex exec "..."`. When the same error shows up in three separate checks, jev-watch stops Codex, prints the repeated error and the last 50 log lines, and gives you a `--resume` command to send a correction into the same Codex session.
 
 ### How do I monitor OpenCode or Codex running in the background from Claude Code?
-Start the worker through jev-watch as a background command. Claude Code is woken only when jev-watch exits, which happens when the worker finishes or needs a correction. No polling, no reading logs.
+Install the jev-watch Claude Code plugin. Its hook runs every `codex exec` / `opencode run` in the background under jev-watch, and Claude is woken only when the worker finishes or needs a correction. No polling, no reading logs, no CLAUDE.md edits.
 
 ### Does jev-watch replace my orchestrator?
 No. Tools like foreman put a model in charge of the workers. jev-watch only watches and stops; your orchestrator (Claude Code, another agent, or you) still decides what the correction is.
