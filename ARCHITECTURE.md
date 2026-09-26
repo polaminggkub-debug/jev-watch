@@ -3,9 +3,13 @@
 jev-watch uses [Feature-Sliced Design](https://feature-sliced.design) adapted for a CLI with no UI. Each layer may import only from layers below it.
 
 ```
-bin/jev-watch.js          entry point, calls src/app
+bin/jev-watch.js          CLI entry point, calls src/app
+bin/jev-watch             shell wrapper; the plugin puts bin/ on Claude's PATH
+hooks/                    Claude Code PreToolUse hook entry, calls src/app/hook.js
+skills/jev-watch/         Claude Code skill: how to read reports and resume
+.claude-plugin/           plugin + marketplace manifests
 src/
-├── app/                  CLI: argument parsing, usage, commands (start, resume, log)
+├── app/                  CLI (arguments, usage, commands) and the Claude Code hook
 ├── features/
 │   └── watch/            the watch loop and one watched attempt
 ├── entities/

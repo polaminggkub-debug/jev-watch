@@ -1,0 +1,3 @@
+#!/bin/sh
+# Plugin bin/ is on the Bash PATH, so Claude can run `jev-watch` directly.
+exec node "$(dirname "$0")/jev-watch.js" "$@"

@@ -11,6 +11,8 @@ Use it when one orchestrator agent delegates coding work to cheaper worker agent
 
 ## Quick reference
 
+- Install as a Claude Code plugin: `claude plugin marketplace add polaminggkub-debug/jev-watch` then `claude plugin install jev-watch@jev-watch`. Its hook wraps every `codex exec` / `opencode run` automatically.
+
 - Run and watch: `jev-watch -- codex exec "<task>"` or `jev-watch -- opencode run "<task>"`
 - Resume after a stop: `jev-watch --resume <runId> "<correction>"`
 - Watch an existing log: `jev-watch --log <file> --pid <pid> --task "<task>"`
