@@ -5,6 +5,8 @@ import { stripAnsi } from '../../shared/text/index.js';
 
 const ERROR_LINE = /\b(error|failed|failure|exception|traceback|cannot|fatal)\b|✘|✗/i;
 const WINDOW_MS = 10 * 60 * 1000;
+// A test run that ends green: its "failed"-looking lines were expected output.
+const PASS_LINE = /^OK\b|^#\s*fail\s+0\b|\b0 failed\b|\b\d+ passed\b(?!.*\bfailed\b)/i;
 
 // Collapse the parts of an error line that change between identical failures
 // (numbers, hashes, line:col, timestamps) so repeats compare equal.
@@ -44,6 +46,10 @@ export class Rules {
     const lines = (this.partial + chunk).split('\n');
     this.partial = lines.pop();
     for (const line of lines) {
+      if (PASS_LINE.test(stripAnsi(line).trim())) {
+        this.hits = this.hits.filter((h) => h.tick !== this.tickNo);
+        continue;
+      }
       const sig = errorSignature(line);
       if (sig) this.hits.push({ sig, line: line.trim().slice(0, 300), at: this.now(), tick: this.tickNo });
     }

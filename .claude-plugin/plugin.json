@@ -1,6 +1,6 @@
 {
   "name": "jev-watch",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Watchdog for Codex and OpenCode workers: stops them when they loop, stall or drift off task, and lets Claude resume the same session with a correction.",
   "author": { "name": "polaminggkub-debug" },
   "homepage": "https://github.com/polaminggkub-debug/jev-watch",
