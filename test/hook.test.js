@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { preToolUse, wrapCommand } from '../src/app/hook.js';
+import { preToolUse, startsWorker, wrapCommand } from '../src/app/hook.js';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const HOOK = path.join(root, 'hooks', 'pre-tool-use.js');
@@ -20,6 +20,29 @@ test('worker commands are wrapped, everything else is left alone', () => {
   assert.equal(wrap('codex exec "x" # no-jev-watch'), null);
   assert.equal(wrap('JEV_WATCH_DISABLE=1 codex exec "x"'), null);
   assert.equal(wrap('codex login'), null);
+  assert.match(wrap('codex exec -C ~/jev-watch "x"'), /-- codex exec -C ~\/jev-watch "x"$/);
+});
+
+test('a worker hidden in a compound command is found, other commands are not', () => {
+  const incident = `cd /repo; S=/tmp/x; codex exec -m m --sandbox workspace-write -C "$PWD" "$(cat $S/fix.md)" < /dev/null 2>&1 | tail -40`;
+  assert.equal(startsWorker(incident), true);
+  assert.equal(startsWorker('cd ~/jev-watch && codex exec "x"'), true);
+  assert.equal(startsWorker('npm test && FOO=1 opencode run "x"'), true);
+  assert.equal(startsWorker('(nohup codex exec "x") &'), true);
+  assert.equal(startsWorker('git commit -m "codex exec is watched"'), false);
+  assert.equal(startsWorker('echo codex exec'), false);
+  assert.equal(startsWorker('cd /repo && codex exec "x" # no-jev-watch'), false);
+  assert.equal(startsWorker('JEV_WATCH_DISABLE=1 codex exec "x" | tail'), false);
+  assert.equal(startsWorker(`node '/p/bin/jev-watch.js' -- codex exec "x"`), false);
+  assert.equal(startsWorker('jev-watch --task "t" -- codex exec "x" 2>&1'), false);
+});
+
+test('the hook blocks a worker it cannot wrap and says how to rerun it', () => {
+  const env = { CLAUDE_PLUGIN_ROOT: '/p' };
+  const out = preToolUse({ tool_name: 'Bash', tool_input: { command: 'cd /r && codex exec "x" | tail -40' } }, env);
+  assert.equal(out.hookSpecificOutput.permissionDecision, 'deny');
+  assert.match(out.hookSpecificOutput.permissionDecisionReason, /one plain command[\s\S]*no-jev-watch/);
+  assert.equal(preToolUse({ tool_name: 'Bash', tool_input: { command: 'npm test | tail' } }, env), null);
 });
 
 test('the hook output edits the command and backgrounds it without deciding permission', () => {

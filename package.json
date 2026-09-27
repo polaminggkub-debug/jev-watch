@@ -1,6 +1,6 @@
 {
   "name": "jev-watch",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "Watchdog for AI coding agents: stop Codex or OpenCode when they loop, stall or drift off task, then resume the same session with a correction. Built for Claude Code orchestrators. Uses Jev via OpenRouter.",
   "keywords": [
     "ai-agents",

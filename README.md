@@ -39,11 +39,11 @@ Then put your key in `~/.claude/settings.json` so the watcher can ask Jev (skip 
 
 That is all. The plugin brings three things:
 
-- **A hook.** Every time Claude runs `codex exec ...` or `opencode run ...`, the call is wrapped in jev-watch and moved to the background. Your normal permission rules still apply.
+- **A hook.** Every time Claude runs `codex exec ...` or `opencode run ...`, the call is wrapped in jev-watch and moved to the background. Your normal permission rules still apply. If the worker is buried in a compound command (`cd x && codex exec ... | tail`), jev-watch cannot watch it, so the hook blocks the call and tells Claude to rerun it as one plain command. An unwatched worker could otherwise sit waiting for input for hours without anyone being told.
 - **A skill.** Claude learns what the report means, how to write a correction, and when to stop and ask you.
 - **The `jev-watch` command** on Claude's PATH, for `--resume`. No npm install needed.
 
-Turn it off for one command by starting it with `JEV_WATCH_DISABLE=1 `.
+Turn it off for one command by starting it with `JEV_WATCH_DISABLE=1 ` or ending it with `# no-jev-watch`.
 
 ### Standalone CLI
 
