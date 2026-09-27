@@ -7,7 +7,7 @@ description: Use whenever you delegate coding work to Codex (`codex exec`) or Op
 
 This plugin wraps every Bash call that starts with `codex exec` or `opencode run` in `jev-watch` and runs it in the background. You do not need to poll, `sleep`, or tail logs: you are woken when the background command exits.
 
-Write the worker command as one plain command, not part of a `&&` / `|` chain, so the wrap applies:
+Write the worker command as one plain command, not part of a `&&` / `|` chain, so the wrap applies. If you hide the worker inside a compound command (`cd … &&`, `;`, `|`, `2>&1 | tail`, `< /dev/null`), the hook blocks the call: rerun it as one plain command. Use `-C <dir>` instead of `cd`. For a long prompt, write it to a file and tell the worker to read it, or pass `"$(cat file)"` inside quotes:
 
 ```bash
 codex exec -s workspace-write "Add an export-to-CSV button to the orders table. Run npm test when done."
