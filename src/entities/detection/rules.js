@@ -6,6 +6,8 @@ import { stripAnsi } from '../../shared/text/index.js';
 const ERROR_LINE = /\b(error|failed|failure|exception|traceback|cannot|fatal)\b|✘|✗/i;
 const WINDOW_MS = 10 * 60 * 1000;
 // A test run that ends green: its "failed"-looking lines were expected output.
+// Lines of a diff the worker is writing: its own code, not errors it hit.
+const DIFF_LINE = /^\+|^-\s{2,}/;
 const PASS_LINE = /^OK\b|^#\s*fail\s+0\b|\b0 failed\b|\b\d+ passed\b(?!.*\bfailed\b)/i;
 
 // Collapse the parts of an error line that change between identical failures
@@ -50,6 +52,7 @@ export class Rules {
         this.hits = this.hits.filter((h) => h.tick !== this.tickNo);
         continue;
       }
+      if (DIFF_LINE.test(stripAnsi(line).trimEnd())) continue;
       const sig = errorSignature(line);
       if (sig) this.hits.push({ sig, line: line.trim().slice(0, 300), at: this.now(), tick: this.tickNo });
     }

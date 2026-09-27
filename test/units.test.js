@@ -39,6 +39,15 @@ test('error lines from a test run that passes are not a loop', () => {
   assert.equal(rules.check(), null);
 });
 
+test('diff lines the worker writes are not errors', () => {
+  const rules = new Rules({ repeat: 3 });
+  for (let i = 0; i < 3; i++) {
+    rules.feed("+    assert.equal(x, 0, 'Neutral mentions cannot reach 15 opinions');\n");
+    rules.tick();
+  }
+  assert.equal(rules.check(), null);
+});
+
 test('silence and no file changes count as stalled', () => {
   let t = 0;
   const rules = new Rules({ idleMin: 10, noChangeMin: 20, now: () => t });
