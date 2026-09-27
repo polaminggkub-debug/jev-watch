@@ -80,7 +80,7 @@ With the plugin, Claude does all of this for you: it only ever types `codex exec
 | No file changes (git) | free | `--no-change-min 20` |
 | Jev says `looping`, `off_task` or `stalled` | <0.01¢ per check | `--threshold 0.8`, `--strikes 2` in a row |
 
-Local rules stop the worker on the first hit. Jev must agree twice in a row, so one odd answer never kills a good run. Jev is only asked when the log has moved since the last check. A 30-minute run costs well under 1¢.
+Most local rules stop the worker on the first hit. For repeated errors, if Jev's latest check says progressing ≥0.5 or looping <0.2, jev-watch asks again before stopping: a looping confirmation or a Jev error stops the worker, while another progress answer lets it continue. Jev-reported problems otherwise must agree twice in a row, so one odd answer never kills a good run. Jev is only asked when the log has moved since the last check. A 30-minute run costs well under 1¢.
 
 ## The report
 

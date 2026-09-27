@@ -89,3 +89,38 @@ test('Jev must flag a problem in consecutive checks before the worker is stopped
   assert.equal(r.stop.problem, 'off_task');
   assert.equal(r.jevCalls, 4);
 });
+
+const progressAnswer = { probabilities: { progressing: 0.7, looping: 0.1 }, ms: 5 };
+const loopingAnswer = { probabilities: { looping: 0.9 }, ms: 5 };
+
+function repeatedErrorWatch(confirmation) {
+  let calls = 0;
+  const ask = async () => {
+    calls += 1;
+    return calls > 3 ? confirmation : progressAnswer;
+  };
+  const source = spawnSource([process.execPath, WORKER, 'loop-finite'], os.tmpdir());
+  return watch({ source, cwd: os.tmpdir(), task: 'fix the import', opts: { intervalSec: 0.03 }, ask });
+}
+
+test('repeated errors do not stop when Jev continues to say progressing', async () => {
+  const r = await repeatedErrorWatch(progressAnswer);
+  assert.equal(r.outcome, 'done');
+  assert.equal(r.stop, null);
+  assert.ok(r.jevCalls > 3);
+});
+
+test('repeated errors stop when Jev confirms looping', async () => {
+  const r = await repeatedErrorWatch(loopingAnswer);
+  assert.equal(r.outcome, 'stopped');
+  assert.equal(r.stop.problem, 'looping');
+  assert.match(r.stop.reason, /Jev confirmed looping 0\.90/);
+});
+
+test('repeated errors stop when Jev is unavailable during confirmation', async () => {
+  const r = await repeatedErrorWatch({ error: 'http_503' });
+  assert.equal(r.outcome, 'stopped');
+  assert.equal(r.stop.problem, 'looping');
+  assert.match(r.stop.reason, /Jev unavailable/);
+  assert.equal(r.lastJev.error, 'http_503');
+});

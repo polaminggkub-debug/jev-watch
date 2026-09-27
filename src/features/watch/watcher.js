@@ -25,7 +25,10 @@ class Watcher {
     Object.assign(this, { source, cwd, task, ask, now });
     this.rules = new Rules({ repeat: this.o.repeat, idleMin: this.o.idleMin, noChangeMin: this.o.noChangeMin, now });
     this.log = logPath ? createWriteStream(logPath, { flags: 'a' }) : null;
-    Object.assign(this, { tail: '', sessionId: null, stopped: null, lastJev: null, strikes: 0, jevCalls: 0, grew: false });
+    Object.assign(this, {
+      tail: '', sessionId: null, stopped: null, lastJev: null, strikes: 0, jevCalls: 0, grew: false,
+      confirmingRepeatedErrors: false,
+    });
     this.startedAt = now();
     this.fp = fingerprint(cwd);
     this.before = snapshot(cwd);
@@ -53,23 +56,51 @@ class Watcher {
     if (next !== this.fp) this.rules.fileChanged();
     this.fp = next;
     const hit = this.rules.check();
-    if (hit) return this.stop({ ...hit, by: 'rules' });
+    if (hit) {
+      if (this.deferRepeatedErrors(hit)) return this.confirmRepeatedErrors(hit);
+      return this.stop({ ...hit, by: 'rules' });
+    }
+    this.confirmingRepeatedErrors = false;
     if (this.o.jev && this.grew) await this.checkJev();
   }
 
-  async checkJev() {
-    this.grew = false;
-    this.jevCalls += 1;
-    const input = { task: this.task, log: this.tail, files: changedSince(this.cwd, this.before), elapsedMin: this.elapsedMin() };
-    const answer = await this.ask(input);
-    if (answer.error) return;
+  deferRepeatedErrors(hit) {
+    if (hit.problem !== 'looping' || !this.o.jev) return false;
+    if (this.confirmingRepeatedErrors) return true;
+    const probabilities = this.lastJev?.probabilities;
+    if (!probabilities) return false;
+    return probabilities.progressing >= 0.5 || (probabilities.looping ?? 0) < 0.2;
+  }
+
+  async confirmRepeatedErrors(hit) {
+    this.confirmingRepeatedErrors = true;
+    if (!this.grew) return;
+    const answer = await this.askStatus();
     this.lastJev = answer;
+    const looping = answer.probabilities?.looping ?? 0;
+    if (answer.error || looping >= this.o.threshold) {
+      const confirmation = answer.error ? 'Jev unavailable' : `Jev confirmed looping ${looping.toFixed(2)}`;
+      this.stop({ ...hit, reason: `${hit.reason}; ${confirmation}`, by: 'rules' });
+    }
+  }
+
+  async checkJev() {
+    const answer = await this.askStatus();
+    this.lastJev = answer;
+    if (answer.error) return;
     const found = jevProblem(answer, this.o.threshold);
     this.strikes = found ? this.strikes + 1 : 0;
     if (found && this.strikes >= this.o.strikes) {
       const reason = `Jev: ${found.problem} ${found.p.toFixed(2)} in ${this.strikes} checks in a row`;
       this.stop({ problem: found.problem, reason, by: 'jev' });
     }
+  }
+
+  async askStatus() {
+    this.grew = false;
+    this.jevCalls += 1;
+    const input = { task: this.task, log: this.tail, files: changedSince(this.cwd, this.before), elapsedMin: this.elapsedMin() };
+    return this.ask(input);
   }
 
   elapsedMin() {

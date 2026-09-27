@@ -23,6 +23,7 @@ function headline(r) {
 
 function jevLine(jev) {
   if (!jev) return 'none';
+  if (jev.error) return `unavailable (${jev.error})`;
   const probs = Object.entries(jev.probabilities)
     .sort((a, b) => b[1] - a[1])
     .map(([k, v]) => `${k}=${v.toFixed(2)}`)
