@@ -15,6 +15,9 @@ const OPTIONS = {
   resume: { type: 'string' },
   log: { type: 'string' },
   pid: { type: 'string' },
+  triage: { type: 'boolean' },
+  json: { type: 'boolean' },
+  'skip-at': { type: 'string' },
   help: { type: 'boolean', short: 'h' },
 };
 

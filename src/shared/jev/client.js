@@ -31,7 +31,8 @@ export async function decide(request, { key = resolveKey(), fetchFn = fetch, tim
       signal: AbortSignal.timeout(timeoutMs),
     });
     if (!res.ok) return { error: `http_${res.status}`, ms: Date.now() - started };
-    return { answers: (await res.json()).answers || {}, ms: Date.now() - started };
+    const json = await res.json();
+    return { answers: json.answers || {}, usage: json.usage, ms: Date.now() - started };
   } catch (err) {
     return { error: err.name || 'request_failed', ms: Date.now() - started };
   }

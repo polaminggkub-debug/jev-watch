@@ -3,6 +3,7 @@ export const USAGE = `jev-watch: watch a coding agent, stop it when it loops, st
   jev-watch [options] -- <command...>        run and watch a worker
   jev-watch --resume <runId> "<message>"     continue a stopped run's session
   jev-watch --log <file> [--pid N] --task T  watch a log another script writes
+  jev-watch --triage --task T <file|dir...>  which files must the agent read? (read / skim / skip)
 
 Options:
   --task <text>          what the worker should do (default: the command's prompt)
@@ -14,6 +15,8 @@ Options:
   --no-change-min <m>    minutes without file changes before stopping (20)
   --max-resumes <n>      corrections before asking the user (3)
   --no-jev               rules only, no API calls
+  --skip-at <p>          triage: Jev confidence needed to skip a file (0.8)
+  --json                 triage: print JSON instead of lines
   --verbose              also print the worker's output
 
 Key: JEV_WATCH_API_KEY, else OPENROUTER_API_KEY, else TYPESAFE_API_KEY.

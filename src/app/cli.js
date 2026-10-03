@@ -1,6 +1,7 @@
 import { EXIT } from '../features/watch/index.js';
 import { resume, startCommand, startLog } from './commands.js';
 import { parseCli } from './options.js';
+import { triage } from './triage.js';
 import { USAGE, UsageError } from './usage.js';
 
 async function dispatch(argv) {
@@ -9,6 +10,7 @@ async function dispatch(argv) {
     console.log(USAGE);
     return EXIT.done;
   }
+  if (values.triage) return triage(values, positionals);
   if (values.resume) return resume(values, positionals);
   if (values.log) return startLog(values);
   return startCommand(values, cmd);

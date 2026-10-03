@@ -71,6 +71,10 @@ jev-watch --log worker.log --pid 4242 --task "fix the failing checkout test"
 
 With the plugin, Claude does all of this for you: it only ever types `codex exec "..."`.
 
+## Should the agent read this file?
+
+`jev-watch --triage --task "fix the tax bug" src/` asks Jev once per file whether the agent needs to read it, so the agent can skip files without loading them into its context. Each file gets `read`, `skim` or `skip`. Only a confident skip (Jev at least 0.8 sure, change it with `--skip-at`) skips a file; doubt or an API error means `read`. Binary files, files too big for one Jev call (about 96K characters) and anything past 255 files are reported as unjudged, never truncated. Add `--json` for machine-readable output. Cost is one Jev input read of each file, so it pays off on large files, not on a handful of small ones.
+
 ## What counts as a problem
 
 | Check | Cost | Default |

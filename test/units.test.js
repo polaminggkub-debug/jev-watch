@@ -113,3 +113,13 @@ test('opencode resume continues the session', () => {
   ]);
   assert.throws(() => resumeCommand(null, ['aider'], null, 'm'), /only supported/);
 });
+
+test('read verdict only skips when Jev is confident, and fails toward read', async () => {
+  const { readVerdict } = await import('../src/entities/relevance/index.js');
+  assert.equal(readVerdict({ choice: 'skip', probabilities: { skip: 0.95 } }).verdict, 'skip');
+  assert.equal(readVerdict({ choice: 'skip', probabilities: { skip: 0.6, must_read: 0.3 } }).verdict, 'read');
+  assert.equal(readVerdict({ choice: 'skim', probabilities: { skim: 0.7 } }).verdict, 'skim');
+  assert.equal(readVerdict({ choice: 'must_read', probabilities: { must_read: 0.9 } }).verdict, 'read');
+  assert.equal(readVerdict({ error: 'http_500' }).verdict, 'read');
+  assert.equal(readVerdict(null).verdict, 'read');
+});
