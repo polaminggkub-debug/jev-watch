@@ -11,7 +11,8 @@ async function judge(file, { task, cwd, skipAt, clientOpts }) {
   const text = readText(file);
   if (text.error) return { path: rel, verdict: 'unjudged', reason: text.error };
   const answer = await askRelevance({ task, path: rel, content: text.content }, clientOpts);
-  return { path: rel, ...readVerdict(answer, { skipAt }), tokens: answer.usage?.input_tokens ?? null };
+  const probs = answer.probabilities || null;
+  return { path: rel, ...readVerdict(answer, { skipAt }), probs, tokens: answer.usage?.input_tokens ?? null };
 }
 
 async function pool(items, size, worker) {

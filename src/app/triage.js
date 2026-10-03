@@ -5,9 +5,11 @@ import { UsageError } from './usage.js';
 
 const ORDER = { read: 0, skim: 1, unjudged: 2, skip: 3 };
 
+const pct = (n) => (n ?? 0).toFixed(2);
+
 function line(r) {
-  const p = r.p === null || r.p === undefined ? '   -' : r.p.toFixed(2);
-  return `${r.verdict.padEnd(8)} ${p}  ${r.path}${r.reason ? `  (${r.reason})` : ''}`;
+  const probs = r.probs ? `must ${pct(r.probs.must_read)} skim ${pct(r.probs.skim)} skip ${pct(r.probs.skip)}` : '-'.padEnd(26);
+  return `${r.verdict.padEnd(8)} ${probs}  ${r.path}${r.reason ? `  (${r.reason})` : ''}`;
 }
 
 export function skipAt(values) {
